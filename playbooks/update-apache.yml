@@ -20,7 +20,7 @@
         enabled: yes
       when: ansible_os_family == "Debian"
 
-      - name: Ensure Apache listens on port {{ apache_port }}
+      - name: Ensure Apache listens on port 8080
       replace:
         path: /etc/apache2/ports.conf
         regexp: '^Listen\s+\d+'
