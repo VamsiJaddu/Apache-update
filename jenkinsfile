@@ -20,7 +20,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ansible@172.31.1.11 << EOF
                         if [ ! -d "/home/ansible/apache-update" ]; then
                             echo "Cloning Ansible repository..."
-                            git clone https://github.com/VamsiJaddu/apache-update.git /home/ansible/apache-update/playbooks
+                            git clone https://github.com/VamsiJaddu/apache-update.git /home/ansible/apache-update
                         else
                             echo "Updating existing Ansible repository..."
                             cd /home/ansible/apache-update
