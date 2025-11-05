@@ -2,6 +2,10 @@
 - name: Update Apache HTML page
   hosts: all
   become: yes
+  vars:
+    apache_docroot: /var/www/html
+    html_source: /home/ansible/apache-update/files/index.html
+    apache_port: 8080
   tasks:
     - name: Ensure Apache is installed
       ansible.builtin.package:
@@ -16,14 +20,32 @@
         enabled: yes
       when: ansible_os_family == "Debian"
 
-    - name: Copy new HTML page
-      ansible.builtin.copy:
-        src: files/index.html
-        dest: /var/www/html/index.html
-        mode: '0644'
+      - name: Ensure Apache listens on port {{ apache_port }}
+      replace:
+        path: /etc/apache2/ports.conf
+        regexp: '^Listen\s+\d+'
+        replace: "Listen {{ apache_port }}"
+      notify: restart apache
 
-    - name: Restart Apache
-      ansible.builtin.service:
+    - name: Update Apache VirtualHost port
+      replace:
+        path: /etc/apache2/sites-available/000-default.conf
+        regexp: '<VirtualHost \*:.*>'
+        replace: "<VirtualHost *:{{ apache_port }}>"
+      notify: restart apache
+
+    - name: Copy updated HTML page
+      copy:
+        src: "{{ html_source }}"
+        dest: "{{ apache_docroot }}/index.html"
+        owner: www-data
+        group: www-data
+        mode: '0644'
+      notify: restart apache
+
+  handlers:
+    - name: restart apache
+      service:
         name: apache2
         state: restarted
-      when: ansible_os_family == "Debian"
+        enabled: yes
