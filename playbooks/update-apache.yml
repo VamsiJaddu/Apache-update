@@ -1,6 +1,6 @@
 ---
 - name: Install Apache on systems with Nginx running
-  hosts: all
+  hosts: managednode1
   become: true
   vars:
     apache_port: 8081
