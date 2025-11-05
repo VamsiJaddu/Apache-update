@@ -5,15 +5,16 @@ pipeline {
         stage('Checkout Code') {
             steps {
                 git branch: 'main',
-                    url: 'https://github.com/<your-username>/apache-update.git'
+                    url: 'https://github.com/VamsiJaddu/apache-update.git',
+                    credentialsId: 'jenkins-github'
             }
         }
 
         stage('Run Ansible Playbook') {
             steps {
-                sshagent(credentials: ['ansible-ssh-cred']) {
+                sshagent(credentials: ['jenkins-ansible']) {
                     sh '''
-                    ssh -o StrictHostKeyChecking=no ansible@<ANSIBLE_SERVER_IP> "
+                    ssh -o StrictHostKeyChecking=no ansible@172.31.1.11 "
                         cd /home/ansible/apache-update/playbooks &&
                         ansible-playbook update-apache.yml -i /home/ansible/inventory/hosts
                     "
