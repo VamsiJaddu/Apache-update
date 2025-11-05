@@ -1,6 +1,6 @@
 ---
 - name: Update Apache HTML page
-  hosts: webservers
+  hosts: all
   become: yes
   tasks:
     - name: Ensure Apache is installed
