@@ -4,7 +4,7 @@
   become: yes
   vars:
     apache_docroot: /var/www/html
-    html_source: /home/ansible/apache-update/files/index.html
+    html_source: /home/ansible/apache-update/playbooks/files/index.html
     apache_port: 8080
   tasks:
     - name: Ensure Apache is installed
