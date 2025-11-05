@@ -1,10 +1,9 @@
 ---
 - name: Install Apache on systems with Nginx running
   hosts: all
-  become: yes
+  become: true
   vars:
     apache_port: 8081
-    apache_document_root: /var/www/html
 
   tasks:
     - name: Detect OS family
@@ -18,59 +17,44 @@
         update_cache: yes
       when: ansible_os_family == "Debian"
 
-    - name: Install Apache on RHEL/CentOS/Amazon Linux
+    - name: Install Apache on RHEL/CentOS
       ansible.builtin.yum:
         name: httpd
         state: present
       when: ansible_os_family == "RedHat"
 
-    - name: Ensure Apache listens on custom port (8081) - Debian/Ubuntu
+    - name: Ensure Apache listens on custom port (8081)
       ansible.builtin.lineinfile:
-        path: /etc/apache2/ports.conf
-        regexp: '^Listen '
+        path: "{{ '/etc/apache2/ports.conf' if ansible_os_family == 'Debian' else '/etc/httpd/conf/httpd.conf' }}"
+        regexp: '^Listen'
         line: "Listen {{ apache_port }}"
-        state: present
-      when: ansible_os_family == "Debian"
-      notify: Restart Apache
-
-    - name: Ensure Apache listens on custom port (8081) - RHEL/CentOS
-      ansible.builtin.lineinfile:
-        path: /etc/httpd/conf/httpd.conf
-        regexp: '^Listen '
-        line: "Listen {{ apache_port }}"
-        state: present
-      when: ansible_os_family == "RedHat"
-      notify: Restart Apache
+        backup: yes
 
     - name: Update default VirtualHost for Debian/Ubuntu
       ansible.builtin.replace:
         path: /etc/apache2/sites-available/000-default.conf
-        regexp: '(<VirtualHost \*:)([0-9]+)(>)'
-        replace: '\1{{ apache_port }}\3'
+        regexp: '(<VirtualHost\s+\*:)\d+>'
+        replace: '\g<1>{{ apache_port }}>'
+
       when: ansible_os_family == "Debian"
-      notify: Restart Apache
 
     - name: Update default VirtualHost for RHEL/CentOS
-      ansible.builtin.lineinfile:
+      ansible.builtin.replace:
         path: /etc/httpd/conf/httpd.conf
-        regexp: '(<VirtualHost \*:)([0-9]+)(>)'
-        line: "<VirtualHost *:{{ apache_port }}>"
-        insertafter: EOF
+        regexp: '(<VirtualHost\s+\*:)\d+>'
+        replace: '\g<1>{{ apache_port }}>'
       when: ansible_os_family == "RedHat"
-      notify: Restart Apache
 
-    - name: Deploy index.html page
+    - name: Copy updated HTML file
       ansible.builtin.copy:
         src: files/index.html
-        dest: "{{ apache_document_root }}/index.html"
+        dest: "{{ '/var/www/html/index.html' }}"
         owner: root
         group: root
         mode: '0644'
 
-  handlers:
-    - name: Restart Apache
+    - name: Restart Apache service
       ansible.builtin.service:
         name: "{{ 'apache2' if ansible_os_family == 'Debian' else 'httpd' }}"
         state: restarted
-        enabled: yes
 
