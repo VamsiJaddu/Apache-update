@@ -18,12 +18,12 @@ pipeline {
                 sshagent(credentials: ['jenkins-ansible']) {
                     sh '''
                         ssh -o StrictHostKeyChecking=no ansible@172.31.1.11 << EOF
-                        if [ ! -d "/home/ansible/apache-update/playbooks" ]; then
+                        if [ ! -d "/home/ansible/apache-update" ]; then
                             echo "Cloning Ansible repository..."
                             git clone https://github.com/VamsiJaddu/apache-update.git /home/ansible/apache-update/playbooks
                         else
                             echo "Updating existing Ansible repository..."
-                            cd /home/ansible/apache-update/playbooks
+                            cd /home/ansible/apache-update
                             git pull
                         fi
                         << EOF
